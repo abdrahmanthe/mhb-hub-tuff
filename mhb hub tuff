@@ -1,42 +1,12 @@
--- Developer Panel With Teleport Search
+-- DEV PANEL (STABLE)
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 
 ------------------------------------------------
--- SETTINGS
-------------------------------------------------
-
-local DEFAULT_SPEED = 16
-local DEFAULT_JUMP = 50
-
-local walkSpeed = DEFAULT_SPEED
-local jumpPower = DEFAULT_JUMP
-
-local infiniteJump = false
-local lowGravity = false
-local noclip = false
-local menuOpen = false
-
-------------------------------------------------
--- TELEPORT LOCATIONS
-------------------------------------------------
-
-local locations = {
-
-	{ name = "Spawn", position = Vector3.new(0,5,0) },
-	{ name = "Arena", position = Vector3.new(120,5,40) },
-	{ name = "Shop", position = Vector3.new(-80,5,60) },
-	{ name = "Hill", position = Vector3.new(50,30,-20) }
-
-}
-
-------------------------------------------------
--- CHARACTER HELPERS
+-- FUNCTIONS
 ------------------------------------------------
 
 local function getCharacter()
@@ -44,11 +14,13 @@ local function getCharacter()
 end
 
 local function getHumanoid()
-	return getCharacter():FindFirstChildOfClass("Humanoid")
+	local char = getCharacter()
+	return char:FindFirstChildOfClass("Humanoid")
 end
 
 local function getRoot()
-	return getCharacter():FindFirstChild("HumanoidRootPart")
+	local char = getCharacter()
+	return char:FindFirstChild("HumanoidRootPart")
 end
 
 ------------------------------------------------
@@ -57,223 +29,80 @@ end
 
 local gui = Instance.new("ScreenGui")
 gui.ResetOnSpawn = false
-gui.Parent = player.PlayerGui
+gui.Parent = player:WaitForChild("PlayerGui")
 
-local handle = Instance.new("TextButton")
-handle.Size = UDim2.new(0,40,0,40)
-handle.Position = UDim2.new(0,10,0.7,0)
-handle.Text = "≡"
-handle.TextScaled = true
-handle.BackgroundColor3 = Color3.fromRGB(40,40,40)
-handle.TextColor3 = Color3.new(1,1,1)
-handle.Parent = gui
-handle.Active = true
-handle.Draggable = true
-Instance.new("UICorner",handle)
+------------------------------------------------
+-- OPEN BUTTON
+------------------------------------------------
+
+local open = Instance.new("TextButton")
+open.Size = UDim2.new(0,40,0,40)
+open.Position = UDim2.new(0,10,0.7,0)
+open.Text = "≡"
+open.TextScaled = true
+open.BackgroundColor3 = Color3.fromRGB(40,40,40)
+open.TextColor3 = Color3.new(1,1,1)
+open.Parent = gui
+
+------------------------------------------------
+-- PANEL
+------------------------------------------------
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,260,0,520)
-frame.Position = UDim2.new(-1,0,0.4,-260)
+frame.Size = UDim2.new(0,260,0,420)
+frame.Position = UDim2.new(-1,0,0.5,-210)
 frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
 frame.Parent = gui
 frame.Active = true
 frame.Draggable = true
-Instance.new("UICorner",frame)
-
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1,0,0,30)
-title.Text = "Developer Panel"
-title.BackgroundTransparency = 1
-title.TextColor3 = Color3.new(1,1,1)
-title.Parent = frame
 
 ------------------------------------------------
 -- BUTTON CREATOR
 ------------------------------------------------
 
-local function createButton(text,y)
+local function makeButton(text,y)
 
-	local btn = Instance.new("TextButton")
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0.8,0,0,30)
+	b.Position = UDim2.new(0.1,0,0,y)
 
-	btn.Size = UDim2.new(0.8,0,0,30)
-	btn.Position = UDim2.new(0.1,0,0,y)
+	b.Text = text
+	b.BackgroundColor3 = Color3.fromRGB(170,0,0)
+	b.TextColor3 = Color3.new(1,1,1)
 
-	btn.Text = text
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.BackgroundColor3 = Color3.fromRGB(170,0,0)
+	b.Parent = frame
 
-	btn.Parent = frame
-	Instance.new("UICorner",btn)
-
-	return btn
+	return b
 
 end
 
 ------------------------------------------------
--- MOVEMENT BUTTONS
+-- MOVEMENT
 ------------------------------------------------
 
-local speedUp = createButton("Speed +10",40)
-local speedDown = createButton("Speed -10",80)
+local speedUp = makeButton("Speed +10",40)
+local speedDown = makeButton("Speed -10",80)
 
-local jumpUp = createButton("Jump +10",120)
-local jumpDown = createButton("Jump -10",160)
+local jumpUp = makeButton("Jump +10",120)
+local jumpDown = makeButton("Jump -10",160)
 
-local infJump = createButton("Infinite Jump OFF",200)
-local gravityBtn = createButton("Low Gravity OFF",240)
-local noclipBtn = createButton("Noclip OFF",280)
-local resetBtn = createButton("Reset Character",320)
+local infJump = makeButton("Infinite Jump OFF",200)
 
 ------------------------------------------------
--- SPEED
+-- TELEPORT UI
 ------------------------------------------------
 
-speedUp.MouseButton1Click:Connect(function()
-
-	walkSpeed += 10
-	local hum = getHumanoid()
-
-	if hum then
-		hum.WalkSpeed = walkSpeed
-	end
-
-end)
-
-speedDown.MouseButton1Click:Connect(function()
-
-	walkSpeed = math.max(16,walkSpeed-10)
-	local hum = getHumanoid()
-
-	if hum then
-		hum.WalkSpeed = walkSpeed
-	end
-
-end)
-
-------------------------------------------------
--- JUMP
-------------------------------------------------
-
-jumpUp.MouseButton1Click:Connect(function()
-
-	jumpPower += 10
-	local hum = getHumanoid()
-
-	if hum then
-		hum.JumpPower = jumpPower
-	end
-
-end)
-
-jumpDown.MouseButton1Click:Connect(function()
-
-	jumpPower = math.max(50,jumpPower-10)
-	local hum = getHumanoid()
-
-	if hum then
-		hum.JumpPower = jumpPower
-	end
-
-end)
-
-------------------------------------------------
--- INFINITE JUMP
-------------------------------------------------
-
-infJump.MouseButton1Click:Connect(function()
-
-	infiniteJump = not infiniteJump
-	infJump.Text = infiniteJump and "Infinite Jump ON" or "Infinite Jump OFF"
-
-end)
-
-UIS.JumpRequest:Connect(function()
-
-	if infiniteJump then
-
-		local hum = getHumanoid()
-
-		if hum then
-			hum:ChangeState(Enum.HumanoidStateType.Jumping)
-		end
-
-	end
-
-end)
-
-------------------------------------------------
--- LOW GRAVITY
-------------------------------------------------
-
-gravityBtn.MouseButton1Click:Connect(function()
-
-	lowGravity = not lowGravity
-	workspace.Gravity = lowGravity and 60 or 196.2
-
-	gravityBtn.Text = lowGravity and "Low Gravity ON" or "Low Gravity OFF"
-
-end)
-
-------------------------------------------------
--- NOCLIP
-------------------------------------------------
-
-noclipBtn.MouseButton1Click:Connect(function()
-
-	noclip = not noclip
-	noclipBtn.Text = noclip and "Noclip ON" or "Noclip OFF"
-
-end)
-
-RunService.Stepped:Connect(function()
-
-	if noclip then
-
-		for _,v in pairs(getCharacter():GetDescendants()) do
-			if v:IsA("BasePart") then
-				v.CanCollide = false
-			end
-		end
-
-	end
-
-end)
-
-------------------------------------------------
--- RESET
-------------------------------------------------
-
-resetBtn.MouseButton1Click:Connect(function()
-
-	player:LoadCharacter()
-
-end)
-
-------------------------------------------------
--- TELEPORT SEARCH BAR
-------------------------------------------------
-
-local searchBox = Instance.new("TextBox")
-
-searchBox.Size = UDim2.new(0.8,0,0,25)
-searchBox.Position = UDim2.new(0.1,0,0,360)
-
-searchBox.PlaceholderText = "Search location..."
-searchBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
-searchBox.TextColor3 = Color3.new(1,1,1)
-
-searchBox.Parent = frame
-Instance.new("UICorner",searchBox)
-
-------------------------------------------------
--- LOCATION LIST
-------------------------------------------------
+local search = Instance.new("TextBox")
+search.Size = UDim2.new(0.8,0,0,25)
+search.Position = UDim2.new(0.1,0,0,250)
+search.PlaceholderText = "Search location..."
+search.BackgroundColor3 = Color3.fromRGB(60,60,60)
+search.TextColor3 = Color3.new(1,1,1)
+search.Parent = frame
 
 local list = Instance.new("ScrollingFrame")
-
 list.Size = UDim2.new(0.8,0,0,120)
-list.Position = UDim2.new(0.1,0,0,390)
-
+list.Position = UDim2.new(0.1,0,0,280)
 list.BackgroundTransparency = 1
 list.ScrollBarThickness = 6
 list.Parent = frame
@@ -282,37 +111,47 @@ local layout = Instance.new("UIListLayout")
 layout.Parent = list
 
 ------------------------------------------------
--- UPDATE LOCATION LIST
+-- LOCATIONS
 ------------------------------------------------
 
-local function updateLocations()
+local locations = {
+
+	{ name = "Spawn", pos = Vector3.new(0,5,0) },
+	{ name = "Arena", pos = Vector3.new(100,5,50) },
+	{ name = "Hill", pos = Vector3.new(-50,20,10) }
+
+}
+
+------------------------------------------------
+-- UPDATE LIST
+------------------------------------------------
+
+local function update()
 
 	list:ClearAllChildren()
 	layout.Parent = list
 
-	local filter = searchBox.Text:lower()
+	local filter = search.Text:lower()
 
 	for _,loc in pairs(locations) do
 
 		if filter == "" or loc.name:lower():find(filter) then
 
-			local btn = Instance.new("TextButton")
+			local b = Instance.new("TextButton")
 
-			btn.Size = UDim2.new(1,0,0,25)
-			btn.Text = loc.name
+			b.Size = UDim2.new(1,0,0,25)
+			b.Text = loc.name
+			b.BackgroundColor3 = Color3.fromRGB(60,60,60)
+			b.TextColor3 = Color3.new(1,1,1)
 
-			btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-			btn.TextColor3 = Color3.new(1,1,1)
+			b.Parent = list
 
-			btn.Parent = list
-			Instance.new("UICorner",btn)
-
-			btn.MouseButton1Click:Connect(function()
+			b.MouseButton1Click:Connect(function()
 
 				local root = getRoot()
 
 				if root then
-					root.CFrame = CFrame.new(loc.position)
+					root.CFrame = CFrame.new(loc.pos)
 				end
 
 			end)
@@ -321,28 +160,84 @@ local function updateLocations()
 
 	end
 
-	task.wait()
-
-	list.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y)
-
 end
 
-searchBox:GetPropertyChangedSignal("Text"):Connect(updateLocations)
+search:GetPropertyChangedSignal("Text"):Connect(update)
 
-updateLocations()
+update()
 
 ------------------------------------------------
--- PANEL TOGGLE
+-- MOVEMENT FUNCTIONS
 ------------------------------------------------
 
-handle.MouseButton1Click:Connect(function()
+speedUp.MouseButton1Click:Connect(function()
 
-	menuOpen = not menuOpen
+	local hum = getHumanoid()
+	if hum then hum.WalkSpeed += 10 end
 
-	local target =
-	menuOpen and UDim2.new(0,60,0.4,-260)
-	or UDim2.new(-1,0,0.4,-260)
+end)
 
-	TweenService:Create(frame,TweenInfo.new(0.3),{Position = target}):Play()
+speedDown.MouseButton1Click:Connect(function()
+
+	local hum = getHumanoid()
+	if hum then hum.WalkSpeed -= 10 end
+
+end)
+
+jumpUp.MouseButton1Click:Connect(function()
+
+	local hum = getHumanoid()
+	if hum then hum.JumpPower += 10 end
+
+end)
+
+jumpDown.MouseButton1Click:Connect(function()
+
+	local hum = getHumanoid()
+	if hum then hum.JumpPower -= 10 end
+
+end)
+
+------------------------------------------------
+-- INFINITE JUMP
+------------------------------------------------
+
+local infinite = false
+
+infJump.MouseButton1Click:Connect(function()
+
+	infinite = not infinite
+	infJump.Text = infinite and "Infinite Jump ON" or "Infinite Jump OFF"
+
+end)
+
+UIS.JumpRequest:Connect(function()
+
+	if infinite then
+		local hum = getHumanoid()
+		if hum then
+			hum:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end
+
+end)
+
+------------------------------------------------
+-- OPEN PANEL
+------------------------------------------------
+
+local openState = false
+
+open.MouseButton1Click:Connect(function()
+
+	openState = not openState
+
+	frame:TweenPosition(
+		openState and UDim2.new(0,60,0.5,-210)
+		or UDim2.new(-1,0,0.5,-210),
+		Enum.EasingDirection.Out,
+		Enum.EasingStyle.Quad,
+		0.3
+	)
 
 end)
